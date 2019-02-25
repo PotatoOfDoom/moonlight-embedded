@@ -19,7 +19,7 @@
 
 #include "loop.h"
 
-#include "connection.h"
+#include "connection-nx.h"
 
 #include <sys/stat.h>
 #include <stdlib.h>

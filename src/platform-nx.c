@@ -19,7 +19,7 @@
 
 #define _GNU_SOURCE
 
-#include "platform.h"
+#include "platform-nx.h"
 
 #include "util.h"
 

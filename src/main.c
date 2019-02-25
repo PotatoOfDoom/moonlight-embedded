@@ -18,10 +18,10 @@
  */
 
 #include "loop.h"
-#include "connection.h"
+#include "connection-nx.h"
 #include "configuration.h"
 #include "config.h"
-#include "platform.h"
+#include "platform-nx.h"
 
 #include "audio/audio.h"
 #include "video/video.h"
