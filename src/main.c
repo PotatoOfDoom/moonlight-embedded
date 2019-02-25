@@ -111,15 +111,8 @@ static void stream(PSERVER_DATA server, PCONFIGURATION config, enum platform sys
     connection_debug = true;
   }
 
-  if (IS_EMBEDDED(system))
-    loop_init();
-
   platform_start(system);
   LiStartConnection(&server->serverInfo, &config->stream, &connection_callbacks, platform_get_video(system), platform_get_audio(system, config->audio_device), NULL, drFlags, config->audio_device, 0);
-
-  if (IS_EMBEDDED(system)) {
-    loop_main();
-  }
 
   LiStopConnection();
 
@@ -208,24 +201,6 @@ int main(int argc, char* argv[]) {
       printf("Platform %s\n", platform_name(system));
 
     config.stream.supportsHevc = config.codec != CODEC_H264 && (config.codec == CODEC_HEVC || platform_supports_hevc(system));
-
-    if (IS_EMBEDDED(system)) {
-      char* mapping_env = getenv("SDL_GAMECONTROLLERCONFIG");
-      if (config.mapping == NULL && mapping_env == NULL) {
-        fprintf(stderr, "Please specify mapping file as default mapping could not be found.\n");
-        exit(-1);
-      }
-
-      struct mapping* mappings = NULL;
-      if (config.mapping != NULL)
-        mappings = mapping_load(config.mapping, config.debug_level > 0);
-
-      if (mapping_env != NULL) {
-        struct mapping* map = mapping_parse(mapping_env);
-        map->next = mappings;
-        mappings = map;
-      }
-    }
 
     stream(&server, &config, system);
   } else if (strcmp("pair", config.action) == 0) {
