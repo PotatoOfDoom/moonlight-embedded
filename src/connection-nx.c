@@ -23,13 +23,12 @@
 #include <stdarg.h>
 #include <signal.h>
 
-pthread_t main_thread_id = 0;
+Thread main_thread;
 bool connection_debug;
 ConnListenerRumble rumble_handler = NULL;
 
 static void connection_terminated() {
-  if (main_thread_id != 0)
-    pthread_kill(main_thread_id, SIGTERM);
+  threadClose(&main_thread);
 }
 
 static void connection_display_message(const char *msg) {

@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Aarch64",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/devkitPro/devkitA64/aarch64-none-elf/include/**",
+                "C:/devkitPro/libnx/include/**",
+                "C:/devkitPro/portlibs/switch/include/**",
+                "C:/devkitPro/devkitA64/lib/gcc/aarch64-none-elf/8.2.0/include/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

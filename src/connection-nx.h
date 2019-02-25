@@ -21,10 +21,10 @@
 
 #include <Limelight.h>
 
-#include <pthread.h>
+#include <switch.h>
 #include <stdbool.h>
 
 extern CONNECTION_LISTENER_CALLBACKS connection_callbacks;
-extern pthread_t main_thread_id;
+extern Thread main_thread;
 extern bool connection_debug;
 extern ConnListenerRumble rumble_handler;
