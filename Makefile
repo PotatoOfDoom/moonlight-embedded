@@ -55,7 +55,8 @@ INCLUDES	:=	. \
 				third_party/libuuid \
 				third_party/moonlight-common-c/src \
 				third_party/moonlight-common-c/reedsolomon \
-				third_party/h264bitstream 
+				third_party/h264bitstream \
+				libgamestream
 
 DATA		:=	data
 EXEFS_SRC	:=	exefs_src

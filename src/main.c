@@ -30,12 +30,6 @@
 #include "input/mapping.h"
 #include "input/evdev.h"
 #include "input/udev.h"
-#ifdef HAVE_LIBCEC
-#include "input/cec.h"
-#endif
-#ifdef HAVE_SDL
-#include "input/sdl.h"
-#endif
 
 #include <Limelight.h>
 
