@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define IS_EMBEDDED(SYSTEM) SYSTEM != SDL
+//#define IS_EMBEDDED(SYSTEM) SYSTEM != SDL
 
 enum platform { SWITCH };
 

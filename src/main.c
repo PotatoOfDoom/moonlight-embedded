@@ -138,56 +138,6 @@ static void stream(PSERVER_DATA server, PCONFIGURATION config, enum platform sys
   platform_stop(system);
 }
 
-static void help() {
-  printf("Moonlight Embedded %d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
-  printf("Usage: moonlight [action] (options) [host]\n");
-  printf("       moonlight [configfile]\n");
-  printf("\n Actions\n\n");
-  printf("\tpair\t\t\tPair device with computer\n");
-  printf("\tunpair\t\t\tUnpair device with computer\n");
-  printf("\tstream\t\t\tStream computer to device\n");
-  printf("\tlist\t\t\tList available games and applications\n");
-  printf("\tquit\t\t\tQuit the application or game being streamed\n");
-  printf("\tmap\t\t\tCreate mapping for gamepad\n");
-  printf("\thelp\t\t\tShow this help\n");
-  printf("\n Global Options\n\n");
-  printf("\t-config <config>\tLoad configuration file\n");
-  printf("\t-save <config>\t\tSave configuration file\n");
-  printf("\t-verbose\t\tEnable verbose output\n");
-  printf("\t-debug\t\t\tEnable verbose and debug output\n");
-  printf("\n Streaming options\n\n");
-  printf("\t-720\t\t\tUse 1280x720 resolution [default]\n");
-  printf("\t-1080\t\t\tUse 1920x1080 resolution\n");
-  printf("\t-4k\t\t\tUse 3840x2160 resolution\n");
-  printf("\t-width <width>\t\tHorizontal resolution (default 1280)\n");
-  printf("\t-height <height>\tVertical resolution (default 720)\n");
-  printf("\t-fps <fps>\t\tSpecify the fps to use (default -1)\n");
-  printf("\t-bitrate <bitrate>\tSpecify the bitrate in Kbps\n");
-  printf("\t-packetsize <size>\tSpecify the maximum packetsize in bytes\n");
-  printf("\t-codec <codec>\t\tSelect used codec: auto/h264/h265 (default auto)\n");
-  printf("\t-remote\t\t\tEnable remote optimizations\n");
-  printf("\t-app <app>\t\tName of app to stream\n");
-  printf("\t-nosops\t\t\tDon't allow GFE to modify game settings\n");
-  printf("\t-localaudio\t\tPlay audio locally\n");
-  printf("\t-surround\t\tStream 5.1 surround sound (requires GFE 2.7)\n");
-  printf("\t-keydir <directory>\tLoad encryption keys from directory\n");
-  printf("\t-mapping <file>\t\tUse <file> as gamepad mappings configuration file\n");
-  printf("\t-platform <system>\tSpecify system used for audio, video and input: pi/imx/aml/rk/x11/x11_vdpau/sdl/fake (default auto)\n");
-  printf("\t-unsupported\t\tTry streaming if GFE version or options are unsupported\n");
-  printf("\t-quitappafter\t\tSend quit app request to remote after quitting session\n");
-  #if defined(HAVE_SDL) || defined(HAVE_X11)
-  printf("\n WM options (SDL and X11 only)\n\n");
-  printf("\t-windowed\t\tDisplay screen in a window\n");
-  #endif
-  #ifdef HAVE_EMBEDDED
-  printf("\n I/O options (Not for SDL)\n\n");
-  printf("\t-input <device>\t\tUse <device> as input. Can be used multiple times\n");
-  printf("\t-audio <device>\t\tUse <device> as audio output device\n");
-  #endif
-  printf("\nUse Ctrl+Alt+Shift+Q or Play+Back+LeftShoulder+RightShoulder to exit streaming session\n\n");
-  exit(0);
-}
-
 static void pair_check(PSERVER_DATA server) {
   if (!server->paired) {
     fprintf(stderr, "You must pair with the PC first\n");
@@ -198,12 +148,7 @@ static void pair_check(PSERVER_DATA server) {
 int main(int argc, char* argv[]) {
   CONFIGURATION config;
   config_parse(argc, argv, &config);
-
-  if (config.action == NULL || strcmp("help", config.action) == 0)
-    help();
-  
-  if (config.debug_level > 0)
-    printf("Moonlight Embedded %d.%d.%d (%s)\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, COMPILE_OPTIONS);
+  printf("Moonlight Embedded %d.%d.%d (%s)\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, COMPILE_OPTIONS);
 
   if (strcmp("map", config.action) == 0) { 
     if (config.inputsCount != 1) {
