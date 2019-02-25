@@ -31,6 +31,10 @@
 #include <unistd.h>
 //#include <dlfcn.h>
 
+DECODER_RENDERER_CALLBACKS decoder_renderer_callbacks_switch;
+
+AUDIO_RENDERER_CALLBACKS audio_renderer_callbacks_switch;
+
 typedef bool(*ImxInit)();
 
 enum platform platform_check(char* name) {
