@@ -31,7 +31,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #     - <libnx folder>/default_icon.jpg
 #---------------------------------------------------------------------------------
 APP_TITLE	:= 	Moonlight Switch
-APP_AUTHOR	:=	kbhomes
+APP_AUTHOR	:=	Potato_of_Doom
 APP_VERSION	:= 	0.1
 
 TARGET		:=	moonlight-switch
@@ -44,7 +44,6 @@ SOURCES		:=	src \
 				src/input \
 				libgamestream \
 				third_party/enet \
-				third_party/inih \
 				third_party/libuuid \
 				third_party/moonlight-common-c/src \
 				third_party/moonlight-common-c/reedsolomon \
@@ -53,7 +52,6 @@ SOURCES		:=	src \
 INCLUDES	:=	. \
 				dependencies/include \
 				third_party/enet/include \
-				third_party/inih \
 				third_party/libuuid \
 				third_party/moonlight-common-c/src \
 				third_party/moonlight-common-c/reedsolomon \
