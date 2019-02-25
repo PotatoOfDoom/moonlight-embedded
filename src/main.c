@@ -82,7 +82,6 @@ static void stream(PSERVER_DATA server, PCONFIGURATION config, enum platform sys
   }
 
   int gamepads = 0;
-  gamepads += evdev_gamepads;
   #ifdef HAVE_SDL
   gamepads += sdl_gamepads;
   #endif
@@ -294,20 +293,6 @@ int main(int argc, char* argv[]) {
         map->next = mappings;
         mappings = map;
       }
-
-      for (int i=0;i<config.inputsCount;i++) {
-        if (config.debug_level > 0)
-          printf("Add input %s...\n", config.inputs[i]);
-
-        evdev_create(config.inputs[i], mappings, config.debug_level > 0);
-      }
-
-      udev_init(!inputAdded, mappings, config.debug_level > 0);
-      evdev_init();
-      rumble_handler = evdev_rumble;
-      #ifdef HAVE_LIBCEC
-      cec_init();
-      #endif /* HAVE_LIBCEC */
     }
 
     stream(&server, &config, system);

@@ -19,7 +19,6 @@
 
 #include "config.h"
 
-#include "input/evdev.h"
 #include "audio/audio.h"
 
 #include <stdio.h>
@@ -244,7 +243,7 @@ bool config_file_parse(char* filename, PCONFIGURATION config) {
   char *line = NULL;
   size_t len = 0;
 
-  while (getline(&line, &len, fd) != -1) {
+  while (__getline(&line, &len, fd) != -1) {
     char *key = NULL, *value = NULL;
     if (sscanf(line, "%ms = %m[^\n]", &key, &value) == 2) {
       if (strcmp(key, "address") == 0) {
