@@ -16,7 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with Moonlight; if not, see <http://www.gnu.org/licenses/>.
  */
-
+#include "discover.h"
+//We are atm too stupid to use avahi
+void gs_discover_server(char* dest) {
+	dest = "0.0.0.0";
+}
+ 
+ 
+ 
+/*
 #include "errors.h"
 
 #include <avahi-client/client.h>
@@ -106,3 +114,4 @@ void gs_discover_server(char* dest) {
   if (simple_poll)
     avahi_simple_poll_free(simple_poll);
 }
+*/
