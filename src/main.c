@@ -135,7 +135,7 @@ static void pair_check(PSERVER_DATA server) {
   }
 }
 
-switchexit(int exitId)
+void switchexit(int exitId)
 {
   printf("Error occured with exit code %i\n", exitId);
   while(appletMainLoop())
