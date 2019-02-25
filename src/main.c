@@ -22,14 +22,11 @@
 #include "configuration.h"
 #include "config.h"
 #include "platform.h"
-#include "sdl.h"
 
 #include "audio/audio.h"
 #include "video/video.h"
 
 #include "input/mapping.h"
-#include "input/evdev.h"
-#include "input/udev.h"
 
 #include <Limelight.h>
 
@@ -214,9 +211,8 @@ int main(int argc, char* argv[]) {
       printf("You need to specify one input device using -input.\n");
       exit(-1);
     }
- 
-    evdev_create(config.inputs[0], NULL, config.debug_level > 0);
-    evdev_map(config.inputs[0]); 
+	
+	
     exit(0); 
   }
 
@@ -313,18 +309,6 @@ int main(int argc, char* argv[]) {
       cec_init();
       #endif /* HAVE_LIBCEC */
     }
-    #ifdef HAVE_SDL
-    else if (system == SDL) {
-      if (config.inputsCount > 0) {
-        fprintf(stderr, "You can't select input devices as SDL will automatically use all available controllers\n");
-        exit(-1);
-      }
-
-      sdl_init(config.stream.width, config.stream.height, config.fullscreen);
-      sdlinput_init(config.mapping);
-      rumble_handler = sdlinput_rumble;
-    }
-    #endif
 
     stream(&server, &config, system);
   } else if (strcmp("pair", config.action) == 0) {
