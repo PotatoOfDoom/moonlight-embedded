@@ -82,7 +82,7 @@ LIBS	:=	-lsdl2 -lsdl2_gfx -lsdl2_ttf -lsdl2_image -lpng -ljpeg -lfreetype \
 			-lopus \
 			-lssl -lcrypto \
 			-lbz2 -lz -lexpat -lm \
-			-lstdc++ -lnx
+			-lstdc++ -lnx -lcurl
 
 
 #---------------------------------------------------------------------------------
