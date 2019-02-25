@@ -118,14 +118,8 @@ static void stream(PSERVER_DATA server, PCONFIGURATION config, enum platform sys
   LiStartConnection(&server->serverInfo, &config->stream, &connection_callbacks, platform_get_video(system), platform_get_audio(system, config->audio_device), NULL, drFlags, config->audio_device, 0);
 
   if (IS_EMBEDDED(system)) {
-    evdev_start();
     loop_main();
-    evdev_stop();
   }
-  #ifdef HAVE_SDL
-  else if (system == SDL)
-    sdl_loop();
-  #endif
 
   LiStopConnection();
 
@@ -213,13 +207,6 @@ int main(int argc, char* argv[]) {
     if (config.debug_level > 0)
       printf("Platform %s\n", platform_name(system));
 
-    if (system == 0) {
-      fprintf(stderr, "Platform '%s' not found\n", config.platform);
-      exit(-1);
-    } else if (system == SDL && config.audio_device != NULL) {
-      fprintf(stderr, "You can't select a audio device for SDL\n");
-      exit(-1);
-    }
     config.stream.supportsHevc = config.codec != CODEC_H264 && (config.codec == CODEC_HEVC || platform_supports_hevc(system));
 
     if (IS_EMBEDDED(system)) {

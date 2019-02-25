@@ -34,9 +34,8 @@
 typedef bool(*ImxInit)();
 
 enum platform platform_check(char* name) {
-  bool std = strcmp(name, "auto") == 0;
   if (strcmp(name, "switch") == 0)
-	  return SWITCH
+	  return SWITCH;
   return 0;
 }
 
@@ -53,7 +52,7 @@ DECODER_RENDERER_CALLBACKS* platform_get_video(enum platform system) {
 }
 
 AUDIO_RENDERER_CALLBACKS* platform_get_audio(enum platform system, char* audio_device) {
-	return &decoder_audio_callbacks_switch;
+	return &audio_renderer_callbacks_switch;
 }
 
 bool platform_supports_hevc(enum platform system) {

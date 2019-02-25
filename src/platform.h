@@ -39,4 +39,4 @@ void platform_stop(enum platform system);
 
 extern DECODER_RENDERER_CALLBACKS decoder_renderer_callbacks_switch;
 
-extern DECODER_AUDIO_CALLBACKS decoder_audio_callbacks_switch;
+extern AUDIO_RENDERER_CALLBACKS audio_renderer_callbacks_switch;
