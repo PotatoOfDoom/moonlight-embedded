@@ -23,11 +23,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <getopt.h>
-#include <pwd.h>
 #include <sys/types.h>
+
+#include <switch.h>
 
 #define MOONLIGHT_PATH "/moonlight"
 #define USER_PATHS "."
@@ -70,57 +70,6 @@ static struct option long_options[] = {
   {0, 0, 0, 0},
 };
 
-char* get_path(char* name, char* extra_data_dirs) {
-  const char *xdg_config_dir = getenv("XDG_CONFIG_DIR");
-  const char *home_dir = getenv("HOME");
-
-  if (access(name, R_OK) != -1) {
-      return name;
-  }
-
-  if (!home_dir) {
-    struct passwd *pw = getpwuid(getuid());
-    home_dir = pw->pw_dir;
-  }
-
-  if (!extra_data_dirs)
-    extra_data_dirs = "/usr/share:/usr/local/share";
-  if (!xdg_config_dir)
-    xdg_config_dir = home_dir;
-
-  char *data_dirs = malloc(strlen(USER_PATHS) + 1 + strlen(xdg_config_dir) + 1 + strlen(home_dir) + 1 + strlen(DEFAULT_CONFIG_DIR) + 1 + strlen(extra_data_dirs) + 2);
-  sprintf(data_dirs, USER_PATHS ":%s:%s/" DEFAULT_CONFIG_DIR ":%s/", xdg_config_dir, home_dir, extra_data_dirs);
-
-  char *path = malloc(strlen(data_dirs)+strlen(MOONLIGHT_PATH)+strlen(name)+2);
-  if (path == NULL) {
-    fprintf(stderr, "Not enough memory\n");
-    exit(-1);
-  }
-
-  char* data_dir = data_dirs;
-  char* end;
-  do {
-    end = strstr(data_dir, ":");
-    int length = end != NULL?end - data_dir:strlen(data_dir);
-    memcpy(path, data_dir, length);
-    if (path[0] == '/')
-      sprintf(path+length, MOONLIGHT_PATH "/%s", name);
-    else
-      sprintf(path+length, "/%s", name);
-
-    if(access(path, R_OK) != -1) {
-      free(data_dirs);
-      return path;
-    }
-
-    data_dir = end + 1;
-  } while (end != NULL);
-
-  free(data_dirs);
-  free(path);
-  return NULL;
-}
-
 static void parse_argument(int c, char* value, PCONFIGURATION config) {
   switch (c) {
   case 'a':
@@ -160,7 +109,7 @@ static void parse_argument(int c, char* value, PCONFIGURATION config) {
     inputAdded = true;
     break;
   case 'k':
-    config->mapping = get_path(value, getenv("XDG_DATA_DIRS"));
+    //config->mapping = get_path(value, getenv("XDG_DATA_DIRS"));
     if (config->mapping == NULL) {
       fprintf(stderr, "Unable to open custom mapping file: %s\n", value);
       exit(-1);
@@ -234,69 +183,7 @@ static void parse_argument(int c, char* value, PCONFIGURATION config) {
 }
 
 bool config_file_parse(char* filename, PCONFIGURATION config) {
-  FILE* fd = fopen(filename, "r");
-  if (fd == NULL) {
-    fprintf(stderr, "Can't open configuration file: %s\n", filename);
-    return false;
-  }
-
-  char *line = NULL;
-  size_t len = 0;
-
-  while (__getline(&line, &len, fd) != -1) {
-    char *key = NULL, *value = NULL;
-    if (sscanf(line, "%ms = %m[^\n]", &key, &value) == 2) {
-      if (strcmp(key, "address") == 0) {
-        config->address = value;
-      } else if (strcmp(key, "sops") == 0) {
-        config->sops = strcmp("true", value) == 0;
-      } else if (strcmp(key, "localaudio") == 0) {
-        config->localaudio = strcmp("true", value) == 0;
-      } else if (strcmp(key, "quitappafter") == 0) {
-        config->quitappafter = strcmp("true", value) == 0;
-      } else {
-        for (int i=0;long_options[i].name != NULL;i++) {
-          if (strcmp(long_options[i].name, key) == 0) {
-            if (long_options[i].has_arg == required_argument)
-              parse_argument(long_options[i].val, value, config);
-            else if (strcmp("true", value) == 0)
-              parse_argument(long_options[i].val, NULL, config);
-          }
-        }
-      }
-    }
-  }
   return true;
-}
-
-void config_save(char* filename, PCONFIGURATION config) {
-  FILE* fd = fopen(filename, "w");
-  if (fd == NULL) {
-    fprintf(stderr, "Can't open configuration file: %s\n", filename);
-    exit(EXIT_FAILURE);
-  }
-
-  if (config->stream.width != 1280)
-    write_config_int(fd, "width", config->stream.width);
-  if (config->stream.height != 720)
-    write_config_int(fd, "height", config->stream.height);
-  if (config->stream.fps != 60)
-    write_config_int(fd, "fps", config->stream.fps);
-  if (config->stream.bitrate != -1)
-    write_config_int(fd, "bitrate", config->stream.bitrate);
-  if (config->stream.packetSize != 1024)
-    write_config_int(fd, "packetsize", config->stream.packetSize);
-  if (!config->sops)
-    write_config_bool(fd, "sops", config->sops);
-  if (config->localaudio)
-    write_config_bool(fd, "localaudio", config->localaudio);
-  if (config->quitappafter)
-    write_config_bool(fd, "quitappafter", config->quitappafter);
-
-  if (strcmp(config->app, "Steam") != 0)
-    write_config_string(fd, "app", config->app);
-
-  fclose(fd);
 }
 
 void config_parse(int argc, char* argv[], PCONFIGURATION config) {
@@ -326,14 +213,14 @@ void config_parse(int argc, char* argv[], PCONFIGURATION config) {
   config->codec = CODEC_UNSPECIFIED;
 
   config->inputsCount = 0;
-  config->mapping = get_path("gamecontrollerdb.txt", getenv("XDG_DATA_DIRS"));
+  //config->mapping = get_path("gamecontrollerdb.txt", getenv("XDG_DATA_DIRS"));
   config->key_dir[0] = 0;
 
-  char* config_file = get_path("moonlight.conf", "/etc");
+  /*char* config_file = get_path("moonlight.conf", "/etc");
   if (config_file)
-    config_file_parse(config_file, config);
+    config_file_parse(config_file, config);*/
   
-  if (argc == 2 && access(argv[1], F_OK) == 0) {
+  /*if (argc == 2 && access(argv[1], F_OK) == 0) {
     config->action = "stream";
     if (!config_file_parse(argv[1], config))
       exit(EXIT_FAILURE);
@@ -345,20 +232,9 @@ void config_parse(int argc, char* argv[], PCONFIGURATION config) {
       parse_argument(c, optarg, config);
     }
   }
-
-  if (config->config_file != NULL)
-    config_save(config->config_file, config);
-
-  if (config->key_dir[0] == 0x0) {
-    struct passwd *pw = getpwuid(getuid());
-    const char *dir;
-    if ((dir = getenv("XDG_CACHE_DIR")) != NULL)
-      sprintf(config->key_dir, "%s" MOONLIGHT_PATH, dir);
-    else if ((dir = getenv("HOME")) != NULL)
-      sprintf(config->key_dir, "%s" DEFAULT_CACHE_DIR MOONLIGHT_PATH, dir);
-    else
-      sprintf(config->key_dir, "%s" DEFAULT_CACHE_DIR MOONLIGHT_PATH, pw->pw_dir);
-  }
+*/
+  /*if (config->config_file != NULL)
+    config_save(config->config_file, config);*/
 
   if (config->stream.fps == -1)
     config->stream.fps = config->stream.height >= 1080 ? 30 : 60;
