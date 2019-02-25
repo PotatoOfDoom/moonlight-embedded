@@ -12,7 +12,8 @@
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "__SWITCH__"
             ],
             "cStandard": "c11",
             "cppStandard": "c++17"

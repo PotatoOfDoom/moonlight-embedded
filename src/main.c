@@ -78,7 +78,7 @@ static void stream(PSERVER_DATA server, PCONFIGURATION config, enum platform sys
   int appId = get_app_id(server, config->app);
   if (appId<0) {
     fprintf(stderr, "Can't find app %s\n", config->app);
-    exit(-1);
+    switchexit(-1);
   }
 
   int gamepads = 0;
@@ -99,7 +99,7 @@ static void stream(PSERVER_DATA server, PCONFIGURATION config, enum platform sys
       fprintf(stderr, "Gamestream error: %s\n", gs_error);
     else
       fprintf(stderr, "Errorcode starting app: %d\n", ret);
-    exit(-1);
+    switchexit(-1);
   }
 
   int drFlags = 0;
@@ -128,11 +128,28 @@ static void stream(PSERVER_DATA server, PCONFIGURATION config, enum platform sys
 static void pair_check(PSERVER_DATA server) {
   if (!server->paired) {
     fprintf(stderr, "You must pair with the PC first\n");
-    exit(-1);
+    switchexit(-1);
   }
 }
 
+switchexit(int exit)
+{
+  while(appletMainLoop())
+  {
+    hidScanInput();
+    u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO); // can do even: /* if( hidKeysDown(CONTROLLER_P1_AUTO) & KEY_PLUS) {//...} */ but is not very efficient.
+
+    if (kDown & KEY_PLUS) break;
+    consoleUpdate(NULL);
+  }
+  consoleExit();
+}
+
 int main(int argc, char* argv[]) {
+  consoleInit(NULL);
+  socketInitializeDefault();
+  printf("press A to continue or press + to exit\n");
+
   CONFIGURATION config;
   config_parse(argc, argv, &config);
   printf("Moonlight Embedded %d.%d.%d (%s)\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, COMPILE_OPTIONS);
@@ -140,25 +157,24 @@ int main(int argc, char* argv[]) {
   if (strcmp("map", config.action) == 0) { 
     if (config.inputsCount != 1) {
       printf("You need to specify one input device using -input.\n");
-      exit(-1);
+      switchexit(-1);
     }
 	
-	
-    exit(0); 
+    switchexit(0); 
   }
 
   if (config.address == NULL) {
     config.address = malloc(MAX_ADDRESS_SIZE);
     if (config.address == NULL) {
       perror("Not enough memory");
-      exit(-1);
+      switchexit(-1);
     }
     config.address[0] = 0;
     printf("Searching for server...\n");
     gs_discover_server(config.address);
     if (config.address[0] == 0) {
       fprintf(stderr, "Autodiscovery failed. Specify an IP address next time.\n");
-      exit(-1);
+      switchexit(-1);
     }
   }
   
@@ -173,19 +189,19 @@ int main(int argc, char* argv[]) {
   int ret;
   if ((ret = gs_init(&server, config.address, config.key_dir, config.debug_level, config.unsupported)) == GS_OUT_OF_MEMORY) {
     fprintf(stderr, "Not enough memory\n");
-    exit(-1);
+    switchexit(-1);
   } else if (ret == GS_ERROR) {
     fprintf(stderr, "Gamestream error: %s\n", gs_error);
-    exit(-1);
+    switchexit(-1);
   } else if (ret == GS_INVALID) {
     fprintf(stderr, "Invalid data received from server: %s\n", gs_error);
-    exit(-1);
+    switchexit(-1);
   } else if (ret == GS_UNSUPPORTED_VERSION) {
     fprintf(stderr, "Unsupported version: %s\n", gs_error);
-    exit(-1);
+    switchexit(-1);
   } else if (ret != GS_OK) {
     fprintf(stderr, "Can't connect to server %s\n", config.address);
-    exit(-1);
+    switchexit(-1);
   }
 
   if (config.debug_level > 0)

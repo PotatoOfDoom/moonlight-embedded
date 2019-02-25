@@ -22,4 +22,4 @@ $PACMAN -S --needed --noconfirm \
     switch-libopus switch-ffmpeg
 
 echo "Building and installing the bundled dependencies to $MOONLIGHT_DEPDIR"
-(cd switch-openssl; $MAKEPKG --needed --noconfirm;)
+(cd switch-openssl; $MAKEPKG -f --needed --noconfirm;)

@@ -7,12 +7,10 @@
  * GNU Lesser General Public License.
  */
 #include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <sys/unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-
 #include "randutils.h"
 
 #ifdef HAVE_TLS
@@ -27,21 +25,18 @@
 THREAD_LOCAL unsigned short ul_jrand_seed[3];
 #endif
 
+static int getuidx (void)
+{
+	return 1;
+}
+
 int random_get_fd(void)
 {
 	int i, fd;
 	struct timeval	tv;
 
 	gettimeofday(&tv, 0);
-	fd = open("/dev/urandom", O_RDONLY);
-	if (fd == -1)
-		fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
-	if (fd >= 0) {
-		i = fcntl(fd, F_GETFD);
-		if (i >= 0)
-			fcntl(fd, F_SETFD, i | FD_CLOEXEC);
-	}
-	srand((getpid() << 16) ^ getuid() ^ tv.tv_sec ^ tv.tv_usec);
+	srand((getpid() << 16) ^ getuidx() ^ tv.tv_sec ^ tv.tv_usec);
 
 #ifdef DO_JRAND_MIX
 	ul_jrand_seed[0] = getpid() ^ (tv.tv_sec & 0xFFFF);
