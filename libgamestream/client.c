@@ -754,12 +754,9 @@ int gs_init(PSERVER_DATA server, char *address, const char *keyDirectory, int lo
   mkdirtree(keyDirectory);
   if (load_unique_id(keyDirectory) != GS_OK)
     return GS_FAILED;
-
   if (load_cert(keyDirectory))
     return GS_FAILED;
-
   http_init(keyDirectory, log_level);
-
   LiInitializeServerInformation(&server->serverInfo);
   server->serverInfo.address = address;
   server->unsupported = unsupported;

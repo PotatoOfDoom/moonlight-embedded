@@ -26,10 +26,10 @@
 #include <string.h>
 #include <getopt.h>
 #include <sys/types.h>
-
+#include <unistd.h>
 #include <switch.h>
 
-#define MOONLIGHT_PATH "/moonlight"
+#define MOONLIGHT_PATH "/switch/moonlight-switch"
 #define USER_PATHS "."
 #define DEFAULT_CONFIG_DIR "/.config"
 #define DEFAULT_CACHE_DIR "/.cache"
@@ -109,7 +109,7 @@ static void parse_argument(int c, char* value, PCONFIGURATION config) {
     inputAdded = true;
     break;
   case 'k':
-    //config->mapping = get_path(value, getenv("XDG_DATA_DIRS"));
+    config->mapping = strcat(MOONLIGHT_PATH, value);
     if (config->mapping == NULL) {
       fprintf(stderr, "Unable to open custom mapping file: %s\n", value);
       exit(-1);
@@ -183,7 +183,69 @@ static void parse_argument(int c, char* value, PCONFIGURATION config) {
 }
 
 bool config_file_parse(char* filename, PCONFIGURATION config) {
+  FILE* fd = fopen(filename, "r");
+  if (fd == NULL) {
+    fprintf(stderr, "Can't open configuration file: %s\n", filename);
+    return false;
+  }
+
+  char *line = NULL;
+  size_t len = 0;
+
+  while (getline(&line, &len, fd) != -1) {
+    char *key = NULL, *value = NULL;
+    if (sscanf(line, "%ms = %m[^\n]", &key, &value) == 2) {
+      if (strcmp(key, "address") == 0) {
+    	config->address = value;
+      } else if (strcmp(key, "sops") == 0) {
+        config->sops = strcmp("true", value) == 0;
+      } else if (strcmp(key, "localaudio") == 0) {
+        config->localaudio = strcmp("true", value) == 0;
+      } else if (strcmp(key, "quitappafter") == 0) {
+        config->quitappafter = strcmp("true", value) == 0;
+      } else {
+        for (int i=0;long_options[i].name != NULL;i++) {
+          if (strcmp(long_options[i].name, key) == 0) {
+            if (long_options[i].has_arg == required_argument)
+              parse_argument(long_options[i].val, value, config);
+            else if (strcmp("true", value) == 0)
+              parse_argument(long_options[i].val, NULL, config);
+          }
+        }
+      }
+    }
+  }
   return true;
+}
+
+void config_save(char* filename, PCONFIGURATION config) {
+  FILE* fd = fopen(filename, "w");
+  if (fd == NULL) {
+    fprintf(stderr, "Can't open configuration file: %s\n", filename);
+    exit(EXIT_FAILURE);
+  }
+
+  if (config->stream.width != 1280)
+    write_config_int(fd, "width", config->stream.width);
+  if (config->stream.height != 720)
+    write_config_int(fd, "height", config->stream.height);
+  if (config->stream.fps != 60)
+    write_config_int(fd, "fps", config->stream.fps);
+  if (config->stream.bitrate != -1)
+    write_config_int(fd, "bitrate", config->stream.bitrate);
+  if (config->stream.packetSize != 1024)
+    write_config_int(fd, "packetsize", config->stream.packetSize);
+  if (!config->sops)
+    write_config_bool(fd, "sops", config->sops);
+  if (config->localaudio)
+    write_config_bool(fd, "localaudio", config->localaudio);
+  if (config->quitappafter)
+    write_config_bool(fd, "quitappafter", config->quitappafter);
+
+  if (strcmp(config->app, "Steam") != 0)
+    write_config_string(fd, "app", config->app);
+
+  fclose(fd);
 }
 
 void config_parse(int argc, char* argv[], PCONFIGURATION config) {
@@ -198,7 +260,7 @@ void config_parse(int argc, char* argv[], PCONFIGURATION config) {
   config->stream.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
   config->stream.supportsHevc = false;
 
-  config->debug_level = 0;
+  config->debug_level = 2;
   config->platform = "auto";
   config->app = "Steam";
   config->action = NULL;
@@ -211,17 +273,21 @@ void config_parse(int argc, char* argv[], PCONFIGURATION config) {
   config->unsupported = false;
   config->quitappafter = false;
   config->codec = CODEC_UNSPECIFIED;
-
+  config->action = "stream";
   config->inputsCount = 0;
-  //config->mapping = get_path("gamecontrollerdb.txt", getenv("XDG_DATA_DIRS"));
+  config->mapping = strcat(MOONLIGHT_PATH,"gamecontrollerdb.txt");
   config->key_dir[0] = 0;
 
-  /*char* config_file = get_path("moonlight.conf", "/etc");
+  strcpy(config->key_dir, MOONLIGHT_PATH);
+
+  printf("Config dir is in %s\n", config->key_dir);
+
+  char* config_file = strcat(MOONLIGHT_PATH, "moonlight.conf");
   if (config_file)
-    config_file_parse(config_file, config);*/
+    config_file_parse(config_file, config);
   
-  /*if (argc == 2 && access(argv[1], F_OK) == 0) {
-    config->action = "stream";
+  if (argc == 2 && access(argv[1], F_OK) == 0) {
+    
     if (!config_file_parse(argv[1], config))
       exit(EXIT_FAILURE);
 
@@ -232,9 +298,9 @@ void config_parse(int argc, char* argv[], PCONFIGURATION config) {
       parse_argument(c, optarg, config);
     }
   }
-*/
-  /*if (config->config_file != NULL)
-    config_save(config->config_file, config);*/
+
+  if (config->config_file != NULL)
+    config_save(config->config_file, config);
 
   if (config->stream.fps == -1)
     config->stream.fps = config->stream.height >= 1080 ? 30 : 60;

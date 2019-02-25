@@ -43,7 +43,10 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <openssl/ssl.h>
 #include <openssl/rand.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
 
 static void applist(PSERVER_DATA server) {
   PAPP_LIST list = NULL;
@@ -132,8 +135,9 @@ static void pair_check(PSERVER_DATA server) {
   }
 }
 
-switchexit(int exit)
+switchexit(int exitId)
 {
+  printf("Error occured with exit code %i\n", exitId);
   while(appletMainLoop())
   {
     hidScanInput();
@@ -142,15 +146,29 @@ switchexit(int exit)
     if (kDown & KEY_PLUS) break;
     consoleUpdate(NULL);
   }
-  consoleExit();
+  socketExit();
+  consoleExit(NULL);
+  //exit(exitId);
 }
 
 int main(int argc, char* argv[]) {
   consoleInit(NULL);
   socketInitializeDefault();
-  printf("press A to continue or press + to exit\n");
+  nxlinkStdio();
+
+  //Init OpenSSL
+  SSL_library_init();
+  OpenSSL_add_all_algorithms();
+  ERR_load_crypto_strings();
+
+  //Init OpenSSL PRNG
+  size_t seedlen = 2048;
+  void *seedbuf = malloc(seedlen);
+  csrngGetRandomBytes(seedbuf, seedlen);
+  RAND_seed(seedbuf, seedlen);
 
   CONFIGURATION config;
+  printf("Now parsing the Configuration\n");
   config_parse(argc, argv, &config);
   printf("Moonlight Embedded %d.%d.%d (%s)\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, COMPILE_OPTIONS);
 
@@ -158,16 +176,19 @@ int main(int argc, char* argv[]) {
     if (config.inputsCount != 1) {
       printf("You need to specify one input device using -input.\n");
       switchexit(-1);
+      goto EXIT;
     }
 	
-    switchexit(0); 
+    switchexit(0);
+    goto EXIT;
   }
-
+  printf("Checking address\n");
   if (config.address == NULL) {
     config.address = malloc(MAX_ADDRESS_SIZE);
     if (config.address == NULL) {
       perror("Not enough memory");
       switchexit(-1);
+      goto EXIT;
     }
     config.address[0] = 0;
     printf("Searching for server...\n");
@@ -175,9 +196,10 @@ int main(int argc, char* argv[]) {
     if (config.address[0] == 0) {
       fprintf(stderr, "Autodiscovery failed. Specify an IP address next time.\n");
       switchexit(-1);
+      goto EXIT;
     }
   }
-  
+  printf("Checking hosts\n");
   char host_config_file[128];
   sprintf(host_config_file, "hosts/%s.conf", config.address);
   if (access(host_config_file, R_OK) != -1)
@@ -190,18 +212,23 @@ int main(int argc, char* argv[]) {
   if ((ret = gs_init(&server, config.address, config.key_dir, config.debug_level, config.unsupported)) == GS_OUT_OF_MEMORY) {
     fprintf(stderr, "Not enough memory\n");
     switchexit(-1);
+    goto EXIT;
   } else if (ret == GS_ERROR) {
     fprintf(stderr, "Gamestream error: %s\n", gs_error);
     switchexit(-1);
+    goto EXIT;
   } else if (ret == GS_INVALID) {
     fprintf(stderr, "Invalid data received from server: %s\n", gs_error);
     switchexit(-1);
+    goto EXIT;
   } else if (ret == GS_UNSUPPORTED_VERSION) {
     fprintf(stderr, "Unsupported version: %s\n", gs_error);
     switchexit(-1);
+    goto EXIT;
   } else if (ret != GS_OK) {
     fprintf(stderr, "Can't connect to server %s\n", config.address);
     switchexit(-1);
+    goto EXIT;
   }
 
   if (config.debug_level > 0)
@@ -239,4 +266,6 @@ int main(int argc, char* argv[]) {
     gs_quit_app(&server);
   } else
     fprintf(stderr, "%s is not a valid action\n", config.action);
+  EXIT:
+  return 0;
 }

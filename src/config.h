@@ -17,6 +17,7 @@
  * along with Moonlight; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <Limelight.h>
 
 #include <stdbool.h>
@@ -28,14 +29,14 @@ enum codecs { CODEC_UNSPECIFIED, CODEC_H264, CODEC_HEVC };
 typedef struct _CONFIGURATION {
   STREAM_CONFIGURATION stream;
   int debug_level;
-  char* app;
-  char* action;
-  char* address;
-  char* mapping;
-  char* platform;
-  char* audio_device;
-  char* config_file;
-  char key_dir[4096];
+  char app[FILENAME_MAX];
+  char action[FILENAME_MAX];
+  char address[FILENAME_MAX];
+  char mapping[FILENAME_MAX];
+  char platform[FILENAME_MAX];
+  char audio_device[FILENAME_MAX];
+  char config_file[FILENAME_MAX];
+  char key_dir[FILENAME_MAX];
   bool sops;
   bool localaudio;
   bool fullscreen;

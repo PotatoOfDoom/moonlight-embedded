@@ -2,6 +2,7 @@
     "files.associations": {
         "unistd.h": "c",
         "switch.h": "c",
-        "fcntl.h": "c"
+        "fcntl.h": "c",
+        "limits.h": "c"
     }
 }
