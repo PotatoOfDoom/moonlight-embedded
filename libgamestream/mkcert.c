@@ -22,6 +22,7 @@
 #include <openssl/pem.h>
 #include <openssl/conf.h>
 #include <openssl/pkcs12.h>
+#include <openssl/err.h>
 
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
@@ -64,8 +65,8 @@ void mkcert_free(CERT_KEY_PAIR certKeyPair) {
 }
 
 void mkcert_save(const char* certFile, const char* p12File, const char* keyPairFile, CERT_KEY_PAIR certKeyPair) {
-    FILE* certFilePtr = fopen(certFile, "w");
-    FILE* keyPairFilePtr = fopen(keyPairFile, "w");
+    FILE* certFilePtr = fopen(certFile, "wb");
+    FILE* keyPairFilePtr = fopen(keyPairFile, "wb");
     FILE* p12FilePtr = fopen(p12File, "wb");
     
     //TODO: error check

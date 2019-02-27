@@ -135,7 +135,7 @@ struct mapping* mapping_parse(char* mapping) {
 
 struct mapping* mapping_load(char* fileName, bool verbose) {
   struct mapping* mappings = NULL;
-  FILE* fd = fopen(fileName, "r");
+  FILE* fd = fopen(fileName, "rb");
   if (fd == NULL) {
     fprintf(stderr, "Can't open mapping file: %s\n", fileName);
     exit(EXIT_FAILURE);

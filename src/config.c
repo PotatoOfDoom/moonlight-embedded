@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <switch.h>
 
-#define MOONLIGHT_PATH "/switch/moonlight-switch"
+#define MOONLIGHT_PATH "sdmc:/switch/moonlight-switch"
 #define USER_PATHS "."
 #define DEFAULT_CONFIG_DIR "/.config"
 #define DEFAULT_CACHE_DIR "/.cache"
@@ -71,6 +71,7 @@ static struct option long_options[] = {
 };
 
 static void parse_argument(int c, char* value, PCONFIGURATION config) {
+  char* mapfile;
   switch (c) {
   case 'a':
     config->stream.width = 1280;
@@ -109,7 +110,11 @@ static void parse_argument(int c, char* value, PCONFIGURATION config) {
     inputAdded = true;
     break;
   case 'k':
-    config->mapping = strcat(MOONLIGHT_PATH, value);
+    mapfile = malloc(sizeof(char) * FILENAME_MAX);
+    strcpy(mapfile, MOONLIGHT_PATH);
+    strcat(mapfile, "/");
+    strcat(mapfile, value);
+    config->mapping = mapfile;
     if (config->mapping == NULL) {
       fprintf(stderr, "Unable to open custom mapping file: %s\n", value);
       exit(-1);
@@ -183,7 +188,7 @@ static void parse_argument(int c, char* value, PCONFIGURATION config) {
 }
 
 bool config_file_parse(char* filename, PCONFIGURATION config) {
-  FILE* fd = fopen(filename, "r");
+  FILE* fd = fopen(filename, "rb");
   if (fd == NULL) {
     fprintf(stderr, "Can't open configuration file: %s\n", filename);
     return false;
@@ -196,6 +201,7 @@ bool config_file_parse(char* filename, PCONFIGURATION config) {
     char *key = NULL, *value = NULL;
     if (sscanf(line, "%ms = %m[^\n]", &key, &value) == 2) {
       if (strcmp(key, "address") == 0) {
+      printf("Parsing address\n");
     	config->address = value;
       } else if (strcmp(key, "sops") == 0) {
         config->sops = strcmp("true", value) == 0;
@@ -219,7 +225,7 @@ bool config_file_parse(char* filename, PCONFIGURATION config) {
 }
 
 void config_save(char* filename, PCONFIGURATION config) {
-  FILE* fd = fopen(filename, "w");
+  FILE* fd = fopen(filename, "wb");
   if (fd == NULL) {
     fprintf(stderr, "Can't open configuration file: %s\n", filename);
     exit(EXIT_FAILURE);
@@ -248,7 +254,7 @@ void config_save(char* filename, PCONFIGURATION config) {
   fclose(fd);
 }
 
-void config_parse(int argc, char* argv[], PCONFIGURATION config) {
+bool config_parse(int argc, char* argv[], PCONFIGURATION config) {
   LiInitializeStreamConfiguration(&config->stream);
 
   config->stream.width = 1280;
@@ -263,8 +269,8 @@ void config_parse(int argc, char* argv[], PCONFIGURATION config) {
   config->debug_level = 2;
   config->platform = "auto";
   config->app = "Steam";
-  config->action = NULL;
-  config->address = NULL;
+  config->action = "";
+  config->address = "";
   config->config_file = NULL;
   config->audio_device = NULL;
   config->sops = true;
@@ -273,35 +279,26 @@ void config_parse(int argc, char* argv[], PCONFIGURATION config) {
   config->unsupported = false;
   config->quitappafter = false;
   config->codec = CODEC_UNSPECIFIED;
-  config->action = "stream";
+
   config->inputsCount = 0;
-  config->mapping = strcat(MOONLIGHT_PATH,"gamecontrollerdb.txt");
+  char* mapfile = malloc(sizeof(char) * FILENAME_MAX);
+  strcpy(mapfile, MOONLIGHT_PATH);
+  strcat(mapfile, "/gamecontrollerdb.txt");
+  config->mapping = mapfile;
   config->key_dir[0] = 0;
 
   strcpy(config->key_dir, MOONLIGHT_PATH);
 
-  printf("Config dir is in %s\n", config->key_dir);
-
-  char* config_file = strcat(MOONLIGHT_PATH, "moonlight.conf");
-  if (config_file)
-    config_file_parse(config_file, config);
-  
-  if (argc == 2 && access(argv[1], F_OK) == 0) {
-    
-    if (!config_file_parse(argv[1], config))
-      exit(EXIT_FAILURE);
-
-  } else {
-    int option_index = 0;
-    int c;
-    while ((c = getopt_long_only(argc, argv, "-abc:d:efg:h:i:j:k:lm:no:p:q:r:stuv:w:xy", long_options, &option_index)) != -1) {
-      parse_argument(c, optarg, config);
-    }
+  char* cfgfile = malloc(sizeof(char) * FILENAME_MAX);
+  strcpy(cfgfile, MOONLIGHT_PATH);
+  strcat(cfgfile, "/moonlight.conf");
+  char* config_file = cfgfile;
+  /*if (!config_file && !config_file_parse(config_file, config)) {
+    return false;
   }
-
   if (config->config_file != NULL)
     config_save(config->config_file, config);
-
+  */
   if (config->stream.fps == -1)
     config->stream.fps = config->stream.height >= 1080 ? 30 : 60;
 
@@ -313,4 +310,10 @@ void config_parse(int argc, char* argv[], PCONFIGURATION config) {
     else
       config->stream.bitrate = 5000;
   }
+
+  printf("Config dir is in %s\n", config->key_dir);
+  printf("Cfgfile is %s\n", config_file);
+  printf("Mapping is %s\n", config->mapping);
+  printf("Address is %s\n", config->address);
+  return true;
 }

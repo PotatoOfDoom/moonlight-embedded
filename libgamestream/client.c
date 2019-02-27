@@ -90,15 +90,15 @@ static int mkdirtree(const char* directory) {
 static int load_unique_id(const char* keyDirectory) {
   char uniqueFilePath[PATH_MAX];
   snprintf(uniqueFilePath, PATH_MAX, "%s/%s", keyDirectory, UNIQUE_FILE_NAME);
-
-  FILE *fd = fopen(uniqueFilePath, "r");
+  printf("UUID File:%s\n", uniqueFilePath);
+  FILE *fd = fopen(uniqueFilePath, "rb");
   if (fd == NULL) {
     unsigned char unique_data[UNIQUEID_BYTES];
     RAND_bytes(unique_data, UNIQUEID_BYTES);
     for (int i = 0; i < UNIQUEID_BYTES; i++) {
       sprintf(unique_id + (i * 2), "%02x", unique_data[i]);
     }
-    fd = fopen(uniqueFilePath, "w");
+    fd = fopen(uniqueFilePath, "wb");
     if (fd == NULL)
       return GS_FAILED;
 
@@ -115,11 +115,11 @@ static int load_unique_id(const char* keyDirectory) {
 static int load_cert(const char* keyDirectory) {
   char certificateFilePath[PATH_MAX];
   snprintf(certificateFilePath, PATH_MAX, "%s/%s", keyDirectory, CERTIFICATE_FILE_NAME);
-
+  printf("CertificatePath is :%s\n", certificateFilePath);
   char keyFilePath[PATH_MAX];
   snprintf(&keyFilePath[0], PATH_MAX, "%s/%s", keyDirectory, KEY_FILE_NAME);
-
-  FILE *fd = fopen(certificateFilePath, "r");
+  printf("KeyFilePath is :%s\n", keyFilePath);
+  FILE* fd = fopen(certificateFilePath, "rb");
   if (fd == NULL) {
     printf("Generating certificate...");
     CERT_KEY_PAIR cert = mkcert_generate();
@@ -130,7 +130,7 @@ static int load_cert(const char* keyDirectory) {
 
     mkcert_save(certificateFilePath, p12FilePath, keyFilePath, cert);
     mkcert_free(cert);
-    fd = fopen(certificateFilePath, "r");
+    fd = fopen(certificateFilePath, "rb");
   }
 
   if (fd == NULL) {
@@ -155,7 +155,7 @@ static int load_cert(const char* keyDirectory) {
 
   fclose(fd);
 
-  fd = fopen(keyFilePath, "r");
+  fd = fopen(keyFilePath, "rb");
   if (fd == NULL) {
     gs_error = "Error loading key into memory";
     return GS_FAILED;
@@ -163,7 +163,7 @@ static int load_cert(const char* keyDirectory) {
 
   PEM_read_PrivateKey(fd, &privateKey, NULL, NULL);
   fclose(fd);
-
+  printf("load_cert() done\n");
   return GS_OK;
 }
 
@@ -387,7 +387,7 @@ int gs_unpair(PSERVER_DATA server) {
 int gs_pair(PSERVER_DATA server, char* pin) {
   int ret = GS_OK;
   char* result = NULL;
-  char url[4096];
+  char url[4283];
   uuid_t uuid;
   char uuid_str[37];
 
@@ -471,6 +471,8 @@ int gs_pair(PSERVER_DATA server, char* pin) {
   if ((ret = http_request(url, data)) != GS_OK)
     goto cleanup;
 
+  //TODO It starts to crash here
+
   free(result);
   result = NULL;
   if ((ret = xml_status(data->memory, data->size) != GS_OK))
@@ -498,7 +500,7 @@ int gs_pair(PSERVER_DATA server, char* pin) {
   }
 
   for (int i = 0; i < 48; i += 16) {
-    AES_decrypt(&challenge_response_data_enc[i], &challenge_response_data[i], &dec_key);
+    AES_decrypt((unsigned char)&challenge_response_data_enc[i], (unsigned char)&challenge_response_data[i], &dec_key);
   }
 
   char client_secret_data[16];
@@ -751,11 +753,14 @@ int gs_quit_app(PSERVER_DATA server) {
 }
 
 int gs_init(PSERVER_DATA server, char *address, const char *keyDirectory, int log_level, bool unsupported) {
-  mkdirtree(keyDirectory);
+  //mkdirtree(keyDirectory);
   if (load_unique_id(keyDirectory) != GS_OK)
     return GS_FAILED;
-  if (load_cert(keyDirectory))
+  if (load_cert(keyDirectory)) {
+    printf("%s\n", gs_error);
     return GS_FAILED;
+  }
+  printf("We got past load_cert()\n");
   http_init(keyDirectory, log_level);
   LiInitializeServerInformation(&server->serverInfo);
   server->serverInfo.address = address;

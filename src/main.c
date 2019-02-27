@@ -169,10 +169,17 @@ int main(int argc, char* argv[]) {
 
   CONFIGURATION config;
   printf("Now parsing the Configuration\n");
-  config_parse(argc, argv, &config);
+  if(!config_parse(argc, argv, &config)) {
+    switchexit(-1);
+    goto EXIT;
+  }
   printf("Moonlight Embedded %d.%d.%d (%s)\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, COMPILE_OPTIONS);
 
-  if (strcmp("map", config.action) == 0) { 
+  //TODO Change this
+  config.action = "pair";
+  config.address = "192.168.0.35";
+
+  if (strcmp("map", config.action) == 0) { //WTFisDis
     if (config.inputsCount != 1) {
       printf("You need to specify one input device using -input.\n");
       switchexit(-1);
@@ -190,7 +197,6 @@ int main(int argc, char* argv[]) {
       switchexit(-1);
       goto EXIT;
     }
-    config.address[0] = 0;
     printf("Searching for server...\n");
     gs_discover_server(config.address);
     if (config.address[0] == 0) {
@@ -209,6 +215,7 @@ int main(int argc, char* argv[]) {
   printf("Connect to %s...\n", config.address);
 
   int ret;
+  printf("Key dir is: %s\n", config.key_dir);
   if ((ret = gs_init(&server, config.address, config.key_dir, config.debug_level, config.unsupported)) == GS_OUT_OF_MEMORY) {
     fprintf(stderr, "Not enough memory\n");
     switchexit(-1);

@@ -3,6 +3,7 @@
         "unistd.h": "c",
         "switch.h": "c",
         "fcntl.h": "c",
-        "limits.h": "c"
+        "limits.h": "c",
+        "stdio.h": "c"
     }
 }
