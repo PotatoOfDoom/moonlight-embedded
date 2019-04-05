@@ -33,6 +33,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 APP_TITLE	:= 	Moonlight Switch
 APP_AUTHOR	:=	Potato_of_Doom
 APP_VERSION	:= 	0.1
+NO_NACP		:= ayy
 
 TARGET		:=	moonlight-switch
 BUILD		:=	build
@@ -66,7 +67,7 @@ EXEFS_SRC	:=	exefs_src
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIC
 
-CFLAGS	:=	-g -O2 -Wall -ffunction-sections -fpermissive \
+CFLAGS	:=	-g -O2 -Wall -ffunction-sections \
 			$(ARCH) $(DEFINES) $(CFLAGS)
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -D_GNU_SOURCE -DHAVE_USLEEP -DHAS_SOCKLEN_T -DENET_DEBUG -DHAS_POLL -DHAS_FCNTL
@@ -80,9 +81,9 @@ LIBS	:=	-lsdl2 -lsdl2_gfx -lsdl2_ttf -lsdl2_image -lpng -ljpeg -lfreetype \
 			-lEGL -lglapi -ldrm_nouveau \
 			-lavcodec -lavutil \
 			-lopus \
-			-lssl -lcrypto \
-			-lbz2 -lexpat -lm \
-			-lstdc++ -lcurl -lz -lnx
+			 -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lssl -lcrypto\
+			-lbz2 -lexpat -lm -lpthread \
+			-lstdc++ -lz -lnx
 
 
 #---------------------------------------------------------------------------------
@@ -137,7 +138,18 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-export BUILD_EXEFS_SRC := $(TOPDIR)/$(EXEFS_SRC)
+ifeq ($(strip $(CONFIG_JSON)),)
+	jsons := $(wildcard *.json)
+	ifneq (,$(findstring $(TARGET).json,$(jsons)))
+		export APP_JSON := $(TOPDIR)/$(TARGET).json
+	else
+		ifneq (,$(findstring config.json,$(jsons)))
+			export APP_JSON := $(TOPDIR)/config.json
+		endif
+	endif
+else
+	export APP_JSON := $(TOPDIR)/$(CONFIG_JSON)
+endif
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.jpg)
@@ -180,8 +192,11 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).pfs0 $(TARGET).nso $(TARGET).nro $(TARGET).nacp $(TARGET).elf
-
+ifeq ($(strip $(APP_JSON)),)
+	@rm -fr $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf
+else
+	@rm -fr $(BUILD) $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
+endif
 
 #---------------------------------------------------------------------------------
 else

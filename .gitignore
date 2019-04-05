@@ -5,9 +5,6 @@
 *.nro
 *.nso
 *.pfs0
-build/exefs/main
-build/moonlight-switch.lst
-dist/moonlight-switch.elf
-dist/moonlight-switch.pfs0
-dist/moonlight-switch.nso
-dist/moonlight-switch.nro
+build/
+dist/
+.vscode/

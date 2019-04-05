@@ -471,8 +471,6 @@ int gs_pair(PSERVER_DATA server, char* pin) {
   if ((ret = http_request(url, data)) != GS_OK)
     goto cleanup;
 
-  //TODO It starts to crash here
-
   free(result);
   result = NULL;
   if ((ret = xml_status(data->memory, data->size) != GS_OK))
@@ -493,14 +491,14 @@ int gs_pair(PSERVER_DATA server, char* pin) {
     goto cleanup;
   }
 
-  char challenge_response_data_enc[48];
-  char challenge_response_data[48];
+  unsigned char challenge_response_data_enc[48];
+  unsigned char challenge_response_data[48];
   for (int count = 0; count < strlen(result); count += 2) {
     sscanf(&result[count], "%2hhx", &challenge_response_data_enc[count / 2]);
   }
 
   for (int i = 0; i < 48; i += 16) {
-    AES_decrypt((unsigned char)&challenge_response_data_enc[i], (unsigned char)&challenge_response_data[i], &dec_key);
+    AES_decrypt(&challenge_response_data_enc[i], &challenge_response_data[i], &dec_key);
   }
 
   char client_secret_data[16];

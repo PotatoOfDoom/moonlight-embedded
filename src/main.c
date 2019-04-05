@@ -43,10 +43,14 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+
+#include <curl/curl.h>
+#include <libgamestream/http.h>
 
 static void applist(PSERVER_DATA server) {
   PAPP_LIST list = NULL;
@@ -150,8 +154,8 @@ void switchexit(int exitId)
   consoleExit(NULL);
   //exit(exitId);
 }
-
 int main(int argc, char* argv[]) {
+  consoleDebugInit(debugDevice_CONSOLE);
   consoleInit(NULL);
   socketInitializeDefault();
   nxlinkStdio();
@@ -176,8 +180,9 @@ int main(int argc, char* argv[]) {
   printf("Moonlight Embedded %d.%d.%d (%s)\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, COMPILE_OPTIONS);
 
   //TODO Change this
-  config.action = "pair";
+  config.action = "list";
   config.address = "192.168.0.35";
+  config.debug_level = 0;
 
   if (strcmp("map", config.action) == 0) { //WTFisDis
     if (config.inputsCount != 1) {
@@ -274,5 +279,6 @@ int main(int argc, char* argv[]) {
   } else
     fprintf(stderr, "%s is not a valid action\n", config.action);
   EXIT:
+  switchexit(0);
   return 0;
 }

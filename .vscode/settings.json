@@ -4,6 +4,8 @@
         "switch.h": "c",
         "fcntl.h": "c",
         "limits.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "http.h": "c",
+        "ssl.h": "c"
     }
 }
